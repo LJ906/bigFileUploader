@@ -10,6 +10,7 @@ const Bigfileupload = () => import('@/views/bigfileupload.vue')
 const Bigfileupload2 = () => import('@/views/bigfileupload2.vue')
 const Bigfileupload3 = () => import('@/views/bigfileupload3.vue')
 const GlobalUpload = () => import('@/components/globalupload/index')
+// const Linechart = () => import('@/views/Charts/lineChart')
 
 const router = new VueRouter ({
     routes: [
@@ -32,6 +33,14 @@ const router = new VueRouter ({
         {
             path: '/bigfileupload3',
             component: Bigfileupload3
+        },
+        {
+            path: '/lineChart',
+            component: () => import('@/views/Charts/lineChart')
+        },
+        {
+            path: '/columnChart',
+            component: () => import('@/views/Charts/columnChart')
         },
     ]
 })

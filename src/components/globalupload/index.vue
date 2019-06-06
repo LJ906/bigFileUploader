@@ -63,7 +63,7 @@
                 options: {
                     target: "//localhost:3000/upload",
                     chunkSize: '2048000',
-                    fileParameterName: 'upfile',
+                    fileParameterName: 'file', // 上传文件对应的参数名
                     maxChunkRetries: 3,
                     testChunks: true,   //是否开启服务器分片校验
                     // 服务器分片校验函数，秒传及断点续传基础
@@ -97,6 +97,7 @@
             }
         },
         created() {
+            this.$emit('openUploader')
         },
         mounted() {
             Bus.$on('openUploader', query => {

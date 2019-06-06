@@ -7,7 +7,7 @@ import iView from 'iview';
 import 'iview/dist/styles/iview.css';
 import uploader from '@/components/bigfileuploaderorigin'
 
-
+import _ from 'lodash'
 Vue.use(iView);
 Vue.use(uploader);
 

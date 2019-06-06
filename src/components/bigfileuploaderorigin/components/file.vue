@@ -1,5 +1,5 @@
 <template>
-  <div class="uploader-file" :status="status">
+  <div class="uploader-file" :status="status" >
     <slot
       :file="file"
       :list="list"
@@ -40,13 +40,14 @@
         <!-- <div class="uploader-file-meta"> </div> -->
         <!-- 添加进度条 -->
         <div class="uploader-file-status">
+          <!-- <span v-show="status !== 'uploading'">{{statusText}}</span> -->
           <span v-show="status !== 'uploading'">{{statusText}}</span>
           <div v-show="status === 'uploading'" class="lj-process-wrp">
             <Progress :percent="parseInt(progressStyle.progress) " :stroke-width="5" style=" height: 20px; line-height: 30px"/>
             <!-- <span>{{progressStyle.progress}}</span> -->
             <span style="flex: 1; line-height: 20px">
               <em>{{formatedAverageSpeed}}</em>
-              <i> 剩余时间：{{formatedTimeRemaining}}</i>
+              <i> 剩余时间:{{formatedTimeRemaining}}</i>
             </span>
           </div>
         </div>
@@ -56,8 +57,8 @@
           <span class="uploader-file-retry" @click="retry"></span>
           <span class="uploader-file-remove" @click="remove"></span>
         </div>
-        <div class="uploader-file-extra">
-          <span class="uploader-file-position">位置</span>
+        <div class="uploader-file-extra" v-if="isShowFilePosition">
+          <span class="uploader-file-position" @click="handleShowFilePosition(file.relativePath)">位置</span>
         </div>
       </div>
     </slot>
@@ -69,7 +70,7 @@
   import Uploader from 'simple-uploader.js'
   import events from '../common/file-events'
   import { secondsToStr } from '../common/utils'
-import { constants } from 'crypto';
+  import { constants } from 'crypto';
 
   const COMPONENT_NAME = 'uploader-file'
 
@@ -85,6 +86,13 @@ import { constants } from 'crypto';
       list: {
         type: Boolean,
         default: false
+      },
+      isShowFilePosition: {
+        type: Boolean,
+        default: false
+      },
+      handleShowFilePosition: {
+        type: Function
       }
     },
     data () {
@@ -193,6 +201,10 @@ import { constants } from 'crypto';
           clearTimeout(this.tid)
           this.progressingClass = ''
         }
+
+        this.$emit('onStatusChange', newStatus, ()=>{
+          this._actionCheck()
+        });
       }
     },
     methods: {
@@ -244,8 +256,6 @@ import { constants } from 'crypto';
         this.timeRemaining = this.file.timeRemaining()
         this.uploadedSize = this.file.sizeUploaded()
         this._actionCheck()
-
-        console.log('filevue中 this.file', this.file)
       },
       _fileSuccess (rootFile, file, message) {
         if (rootFile) {

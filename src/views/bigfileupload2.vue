@@ -3,11 +3,11 @@
      <div id="global-uploader">
       <!-- 上传 -->
         <!-- @file-success="onFileSuccess" -->
+        <!-- :autoStart="false" -->
       <uploader
         ref="uploader"
         :started="false"
         :options="options"
-        :autoStart="false"
         :file-status-text="statusText"
         @file-added="onFileAdded"
         @file-progress="onFileProgress"
@@ -15,6 +15,16 @@
         @file-complete="onFileComplete" 
         class="uploader-app"
       >
+        <!-- <uploader 
+          :options="options" 
+          :file-status-text="statusText" 
+          class="uploader-example" 
+          ref="uploader" 
+          @file-complete="onFileComplete" 
+          :autoStart="false"
+          @complete="complete">  -->
+        
+
         <uploader-unsupport></uploader-unsupport>
         <div class="uploader-title-wrp">
           <uploader-btn :directory="true">选中文件夹</uploader-btn>
@@ -33,17 +43,15 @@
           <span style="width: 80px;">{{formatedAverageSpeed}}</span> 
           <span style="width: 80px;"> {{totalSize}}</span>
           <div class="total-progress-btn">
-            <Button size="small">删除暂停</Button>
-            <Button size="small">删除暂停</Button>
-            <Button size="small">删除暂停</Button>
-            <Button size="small">删除暂停</Button>
-          </div>
+            <Button size="small" @click="hanldeAllPaused">全部暂停</Button>
+            <Button size="small" @click="hanldeAllUpload">全部开始</Button>
+            <Button size="small" @click="handleAllDelete">全部删除</Button>
+           </div>
         </div>
 
         <uploader-list v-show="panelShow" ref="uploaderList">
           <div class="file-panel" slot-scope="props" :class="{'collapse': collapse}">
             <div class="file-title">
-              <!-- <h2>文件列表</h2> -->
               <h4>文件名</h4>
               <h4>状态</h4>
               <h4>操作</h4>
@@ -57,6 +65,9 @@
                   :file="file"
                   :list="true"
                   @removeFile="removeFile"
+                  :isShowFilePosition="true"
+                  :handleShowFilePosition="handleShowFilePosition"
+                  @onStatusChange="onStatusChange"
                 >
                 </uploader-file>
                 <!-- <div style="width: 10%">文件位置</div> -->
@@ -77,15 +88,16 @@ import { ACCEPT_CONFIG } from "./js/config";
 import Bus from "./js/bus";
 import SparkMD5 from "spark-md5";
 import { constants } from 'crypto';
- import util from './js/util'
+ import util from './js/util';
 export default {
   data() {
     return {
       options: {
         target: "//localhost:3000/upload", // 目标上传 URL
-        chunkSize: "2048000", //分块大小2m 插件会根据你设置的分块的大小自动计算出 chunkNumber当前第几块 totalChunk 总块数
+        // chunkSize: 1 * 1024 * 1024, //分块大小2m 插件会根据你设置的分块的大小自动计算出 chunkNumber当前第几块 totalChunk 总块数
+        chunkSize: 2 * 1024, //分块大小2m 插件会根据你设置的分块的大小自动计算出 chunkNumber当前第几块 totalChunk 总块数
         fileParameterName: "file", //上传文件时文件的参数名，默认file
-        maxChunkRetries: 3, //最大自动失败重试上传次数
+        maxChunkRetries: 1, //最大自动失败重试上传次数
         testChunks: true, //是否开启服务器分片校验
         // autoStart: false,
         simultaneousUploads: 3, // 并发上传数，默认 3
@@ -99,7 +111,7 @@ export default {
          * @message 后台返回的信息 字段skipUpload: true 表示已经传过了 -> 秒传
          */
         checkChunkUploadedByResponse: function(chunk, message) {
-          console.log('message',message)
+          // console.log('message',message)
           let objMessage = {}
           try {
             objMessage = JSON.parse(message) ? JSON.parse(message) : {}
@@ -107,17 +119,14 @@ export default {
                 return true; // skipUpload 已经传过了则 跳过->返回true
               }
           } catch (e) {
-              console.log('e')
+              // console.log('e')
           }
             // fake response
             // objMessage.uploaded_chunks = [2, 3, 4, 5, 6, 8, 10, 11, 12, 13, 17, 20, 21]
             // check the chunk is uploaded
             return (objMessage.uploaded_chunks || []).indexOf(chunk.offset + 1) >= 0
           // }
-          // let objMessage = JSON.parse(message);
-          // if (objMessage.skipUpload) {
-          //   return true; // skipUpload 已经传过了则 跳过->返回true
-          // }
+         
           // uploaded, [1,2,3...] 已经传过的分片，插件会自动跳过这些
           // 判断当前chunk 是否已经上传过了，
           // 注：skipUpload 和 uploaded 是我和后台商议的字段，你要按照后台实际返回的字段名来。
@@ -143,7 +152,7 @@ export default {
       panelShow: true, //选择文件后，展示上传panel
       collapse: false,
       isShowGlobalUploader: true,
-
+      isShowFilePosition: true, // 是否显示文件夹位置的一列
       myFileList: [],
       sizeUploaded: 0, // 总的上传的文件大小
       totalSize: 0, // 总文件大小 
@@ -153,9 +162,9 @@ export default {
     };
   },
   mounted () {
-    this.$nextTick(() => {
-      window.uploader = this.$refs.uploader.uploader
-    })
+    // this.$nextTick(() => {
+    //   window.uploader = this.$refs.uploader.uploader
+    // })
   },
   computed: {
     //Uploader实例
@@ -166,49 +175,58 @@ export default {
       return this.myFileList.length ? this.myFileList.length : 0;
     },
     formatedAverageSpeed () {
-      console.log('计算当前速度', this.currentSpeed)
      let speed =   this.currentSpeed ? this.currentSpeed: 0 
       return `${util.formatSize(speed)} / s`
     },
+    myFileList2() {
+      // console.log('生成计算属性myfileList2')
+      return this.uploader.fileList;
+    }
+  },
+  watch:{
+ 
   },
   methods: {
     // 文件添加进来时能获取file: 名称 文件类型，大小size 相对路径 chunk id
     onFileAdded(file) {
-      // console.log("add", file);
-      this.panelShow = true;
-      this.myFileList = [...file.uploader.fileList]
-      console.log('所有文件列表', this.myFileList)
+       this.panelShow = true;
+      this.myFileList = this.uploader.fileList;
+      // console.log('add中的实例对象', this.uploader)
+      // console.log('add中的所有文件列表', this.myFileList)
+      // this.totalSize = this.uploader.getSize();
+      // console.log('总大小 add', this.totalSize)
       // 计算MD5
       this.computeMD5(file);
     },
 
     // 文件进度的回调
     onFileProgress(rootFile, file, chunk) {
-      // console.log("progress-file", file);
-      // console.log(
+       // console.log(
       //   `上传中 ${file.name}，chunk：${chunk.startByte /
       //     1024 /
       //     1024} ~ ${chunk.endByte / 1024 / 1024}`
       // );
-      this.sizeUploaded = this.uploader.uploader.sizeUploaded();
-      this.totalSize = this.uploader.uploader.getFormatSize();
-      this.totalProgress = this.uploader.uploader.progress() ;
-      this.currentSpeed = this.uploader.uploader.currentSpeed;
-      // this.currentSpeed = this.uploader.uploader.gerCurrentSpeed;
-      console.log('已传大小', this.sizeUploaded)
-      console.log('总大小', this.totalSize)
-      console.log('总进度', this.totalProgress)
-      console.log('speed', this.currentSpeed)
-      console.log('uploader', this.uploader.uploader)
+      this.sizeUploaded = this.uploader.sizeUploaded();
+      this.totalSize = this.uploader.getFormatSize();
+      this.totalProgress = this.uploader.progress() ;
+      this.currentSpeed = this.uploader.currentSpeed;
+      // console.log('已传大小', this.sizeUploaded);
+      // console.log('总大小', this.totalSize);
+      // console.log('总进度', this.totalProgress);
+      // console.log('当前输入speed', this.currentSpeed);
+      // console.log('process中实力uploader', this.uploader);
+
  
     },
     // 上传成功后
     onFileSuccess(rootFile, file, response, chunk) {
+      // console.log('成功success方法调用');
+      // console.log('success中的所有文件列表', this.myFileList)
+      // console.log('success中myFileList2', this.myFileList2)
       let res = JSON.parse(response);
-
       // 服务器自定义的错误，这种错误是Uploader无法拦截的
       if (!res.result) {
-        console.log('onsuccess error')
+        // console.log('onsuccess error')
         // this.$message({ message: res.message, type: "error" }); // 待定 element-ui 转成iview
         return;
       }
@@ -228,7 +246,7 @@ export default {
         //   .catch(e => {});
         // 不需要合并
       } else {
-        Bus.$emit("fileSuccess", res);
+        // Bus.$emit("fileSuccess", res);
         console.log("上传成功");
       }
     },
@@ -275,7 +293,7 @@ export default {
         );
 
         file.uniqueIdentifier = md5;
-        file.resume(); // 继续上传
+        // file.resume(); // 继续上传
       };
       // 可能会出错， 因为大文件会消耗内存消耗
       fileReader.onerror = function() {
@@ -302,9 +320,10 @@ export default {
         duration: 2000
       });
     },
+    // 可以删除
     removeFile (fileList) {
-      console.log('2删除后的list',fileList)
-      this.myFileList = fileList
+      console.log('删除单个文件后的list',this.myFileList);
+      // this.myFileList = fileList
     },
     onFileComplete () {
       console.log('complete参数', arguments)
@@ -316,7 +335,47 @@ export default {
     formatPercent (decimalNum) {
       return parseInt(decimalNum * 100);
     },
-    
+    complete () {
+      console.log('compelte')
+    },
+    // 全部暂停 待定有问题=======
+    hanldeAllPaused() {
+      console.log('点击全部暂停按钮');
+      this.uploader.pause(); // 可以暂停但是 单个文件中的按钮没有改变
+    },
+    // 待定
+    hanldeAllUpload() {
+      console.log('全部开始上传 uploader', this.uploader);
+      this.uploader.resume(); 
+      // this.uploader.fileList.forEach(file => {
+      //   console.log('单个文件上传')
+      //     file.resume();
+      // });
+ 
+    },
+    //  完成
+    handleAllDelete () {
+      this.uploader.cancel(); // 取消上传并上传所有文件
+    },
+    // 根据文件位置打开文件夹 没有盘符只有文件名字， 怎么实现？？
+    handleShowFilePosition (relativePath) {
+      console.log('relativePath', relativePath)
+        try{ 
+            var obj=new ActiveXObject("wscript.shell"); 
+            if(obj){ 
+              obj.run("explorer.exe "+relativePath);
+                // obj.Run("\""+filename+"\"", 1, false );
+                obj=null; 
+            } 
+        }catch(e){ 
+            alert("请确定是否存在该盘符或文件"); 
+        } 
+    },
+    // 测试用 后续删除
+    onStatusChange (status, callback) {
+      console.log('status' ,status, "===方法", callback)
+      callback && callback();
+    }
 
 
   }
@@ -391,7 +450,7 @@ export default {
     }
     .file-list {
       position: relative;
-      height: 240px;
+      min-height: 240px;
       overflow-x: hidden;
       overflow-y: auto;
       background-color: #fff;
