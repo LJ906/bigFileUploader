@@ -11,9 +11,14 @@ const Bigfileupload2 = () => import('@/views/bigfileupload2.vue')
 const Bigfileupload3 = () => import('@/views/bigfileupload3.vue')
 const GlobalUpload = () => import('@/components/globalupload/index')
 // const Linechart = () => import('@/views/Charts/lineChart')
+const Npmbag = () => import('@/views/npmbag/index')
 
 const router = new VueRouter ({
     routes: [
+        {
+            path: '/npmbag',
+            component: Npmbag
+        },
         {
             path: '/fileupload',
             component: UploadFile

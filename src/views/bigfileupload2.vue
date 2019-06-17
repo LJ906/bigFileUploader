@@ -3,8 +3,8 @@
      <div id="global-uploader">
       <!-- 上传 -->
         <!-- @file-success="onFileSuccess" -->
-        <!-- :autoStart="false" -->
       <uploader
+        :autoStart="false"
         ref="uploader"
         :started="false"
         :options="options"
@@ -15,16 +15,7 @@
         @file-complete="onFileComplete" 
         class="uploader-app"
       >
-        <!-- <uploader 
-          :options="options" 
-          :file-status-text="statusText" 
-          class="uploader-example" 
-          ref="uploader" 
-          @file-complete="onFileComplete" 
-          :autoStart="false"
-          @complete="complete">  -->
-        
-
+     
         <uploader-unsupport></uploader-unsupport>
         <div class="uploader-title-wrp">
           <uploader-btn :directory="true">选中文件夹</uploader-btn>
@@ -99,7 +90,6 @@ export default {
         fileParameterName: "file", //上传文件时文件的参数名，默认file
         maxChunkRetries: 1, //最大自动失败重试上传次数
         testChunks: true, //是否开启服务器分片校验
-        // autoStart: false,
         simultaneousUploads: 3, // 并发上传数，默认 3
         initialPaused: true,
         // 服务器分片校验函数，秒传及断点续传基础
