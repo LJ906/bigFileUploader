@@ -16,6 +16,10 @@ const Npmbag = () => import('@/views/npmbag/index')
 const router = new VueRouter ({
     routes: [
         {
+            path: '/tree',
+            component: ()=>import('@/views/tree/tree')
+        },
+        {
             path: '/npmbag',
             component: Npmbag
         },

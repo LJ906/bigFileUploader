@@ -15,6 +15,7 @@
     "jquery": "^3.4.1",
     "lodash": "^4.17.11",
     "node-sass": "^4.12.0",
+    "npm-git": "git+https://github.com/LJ906/npm-git.git",
     "npm-install-git-project": "git+https://github.com/LJ906/npm-install-git-project.git",
     "repo": "0.0.5",
     "sass-loader": "^7.1.0",
