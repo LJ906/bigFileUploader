@@ -10,18 +10,20 @@ const Bigfileupload = () => import('@/views/bigfileupload.vue')
 const Bigfileupload2 = () => import('@/views/bigfileupload2.vue')
 const Bigfileupload3 = () => import('@/views/bigfileupload3.vue')
 const GlobalUpload = () => import('@/components/globalupload/index')
-// const Linechart = () => import('@/views/Charts/lineChart')
-const Npmbag = () => import('@/views/npmbag/index')
 
 const router = new VueRouter ({
     routes: [
+        {
+            path: '/chinamap',
+            component: () => import('@/views/chinaMap/index')
+        },
         {
             path: '/tree',
             component: ()=>import('@/views/tree/tree')
         },
         {
             path: '/npmbag',
-            component: Npmbag
+            component: () => import('@/views/npmbag/index')
         },
         {
             path: '/fileupload',

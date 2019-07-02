@@ -29,7 +29,7 @@
         <div class="uploader-file-name"><i class="uploader-file-icon" :icon="fileCategory"></i>
         <!-- 修改文件名称-->
           <div class="lj-file-name" >
-            <div>{{file.name}}</div>
+            <div class="file-name">{{file.name}}</div>
             <div>
               <span>{{uploadedSize ? transformBtyToMb (uploadedSize) : 0}}</span>/
               <span>{{formatedSize}}</span>
@@ -44,7 +44,6 @@
           <span v-show="status !== 'uploading'">{{statusText}}</span>
           <div v-show="status === 'uploading'" class="lj-process-wrp">
             <Progress :percent="parseInt(progressStyle.progress) " :stroke-width="5" style=" height: 20px; line-height: 30px"/>
-            <!-- <span>{{progressStyle.progress}}</span> -->
             <span style="flex: 1; line-height: 20px">
               <em>{{formatedAverageSpeed}}</em>
               <i> 剩余时间:{{formatedTimeRemaining}}</i>
@@ -486,26 +485,27 @@
   /** 增加 */
   .uploader-file-name {
     display: flex;
-    padding-left: 5px;
+    padding-left: 10px;
   }
   .lj-file-name  {
-     flex: 1;
-     display: flex;
-     flex-direction: column;
-     line-height: 24px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    line-height: 24px;
+    overflow: hidden;
   }
 
-    .lj-file-name div{
-      overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-   }
-   .lj-process-wrp {
-     display: flex;
-     flex-direction: column;
-     justify-content: center;
-     height: 100%;
-    }
+  .lj-file-name div{
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .lj-process-wrp {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+  }
   
   
 </style>

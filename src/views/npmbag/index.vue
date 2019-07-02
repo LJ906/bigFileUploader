@@ -2,8 +2,15 @@
 <template>
     
     <div> 测试内部文字
-        <!-- <hello :message="message" @clickMessage="clickMessage"></hello> -->
+
+        git包 - 组件hello:
+        <hello :message="message" @clickMessage="clickMessage"></hello>
+        <hr>
+        gitbao - 组件 bag1:
+        <bag1 :message="message" @clickMessage="clickMessage"></bag1>
+        <hr>
         <!-- <npminstallgit :message="message"  ></npminstallgit> -->
+        本地包：
         <fuyong :message="message" @click="clickMessage"></fuyong>
 
     </div>

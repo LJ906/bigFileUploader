@@ -164,7 +164,7 @@ let res = [
 ];
 
 export default res
-
+// 格式化树形结构   demo
 
 let result = res.filter(o => o.pId == 0) // 一级 [ children:[]]
 
@@ -179,7 +179,7 @@ function formTreeData (data, result) {
         });
         formTreeData(data, item.children)
     })
-    console.log('一级：', result)
+    console.log('result:', result)
 }
 
 formTreeData (res, result)

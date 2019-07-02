@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "core-js": "^2.6.5",
+    "echarts": "^4.2.1",
     "git": "^0.1.5",
     "highcharts": "^7.1.1",
     "iview": "^3.4.2",
@@ -18,6 +19,7 @@
     "npm-git": "git+https://github.com/LJ906/npm-git.git",
     "npm-install-git-project": "git+https://github.com/LJ906/npm-install-git-project.git",
     "repo": "0.0.5",
+    "resize-detector": "^0.2.0",
     "sass-loader": "^7.1.0",
     "spark-md5": "^3.0.0",
     "vue": "^2.6.10",
