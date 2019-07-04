@@ -21,12 +21,6 @@
                         <div class="operate">
                             <Button  @click="fileListShow"  type="text">{{collapse ? '展开':'折叠'}}</Button>
                             <Button  @click="close"   type="text">关闭</Button>
-                            <!-- <el-button @click="fileListShow" type="text" :title="collapse ? '展开':'折叠' ">
-                                <i class="iconfont" :class="collapse ? 'inuc-fullscreen': 'inuc-minus-round'"></i>
-                            </el-button>
-                            <el-button @click="close" type="text" title="关闭">
-                                <i class="iconfont icon-close"></i>
-                            </el-button> -->
                         </div>
                     </div>
 

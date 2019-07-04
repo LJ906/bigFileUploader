@@ -14,16 +14,28 @@ const GlobalUpload = () => import('@/components/globalupload/index')
 const router = new VueRouter ({
     routes: [
         {
-            path: '/chinamap',
-            component: () => import('@/views/chinaMap/index')
-        },
-        {
-            path: '/tree',
-            component: ()=>import('@/views/tree/tree')
-        },
-        {
-            path: '/npmbag',
-            component: () => import('@/views/npmbag/index')
+            path: '/home',
+            component: () => import('@/views/home'),
+            children: [
+                {
+                    path: '/bigfileupload2',
+                    component: Bigfileupload2
+                     
+                },
+                {
+                    path: '/tree',
+                    component: ()=>import('@/views/tree/tree')
+                },
+                {
+                    path: '/chinamap',
+                    component: () => import('@/views/chinaMap/index')
+                },
+                {
+                    path: '/npmbag',
+                    component: () => import('@/views/npmbag/index')
+                },
+
+            ]
         },
         {
             path: '/fileupload',
@@ -37,10 +49,10 @@ const router = new VueRouter ({
             path: '/bigfileupload',
             component: Bigfileupload
         },
-        {
-            path: '/bigfileupload2',
-            component: Bigfileupload2
-        },
+        // {
+        //     path: '/bigfileupload2',
+        //     component: Bigfileupload2
+        // },
         {
             path: '/bigfileupload3',
             component: Bigfileupload3

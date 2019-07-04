@@ -2,7 +2,7 @@
     <div 
         class="globalupload-wrp" 
         :class="{'collapse': collapse, 'boder-e': collapse}" 
-        v-if="isShowGlobalUploader">
+        v-if="isOpenUpload">
         <div id="global-uploader">
             <!-- 上传 -->
             <uploader
@@ -96,14 +96,17 @@ import { ACCEPT_CONFIG } from "./js/config";
 // import Bus from "./js/bus";
 import SparkMD5 from "spark-md5";
 import util from './js/util';
-
+import {mergeFile} from '@/api'
+  import qs from 'qs'
+console.log('mergeFile', mergeFile)
 export default {
   data() {
     return {
         options: {
-            target: "//localhost:3000/upload", // 目标上传 URL
+            target: "/upload/chunk", // 目标上传 URL
+            // target: "//10.102.17.57:8081/upload/chunk", // 目标上传 URL
             // chunkSize: 1 * 1024 * 1024, //分块大小1m 插件会根据你设置的分块的大小自动计算出 chunkNumber当前第几块 totalChunk 总块数
-            chunkSize: 2 * 1024, //分块大小2kb 
+            chunkSize: 512 * 1024, //分块大小2kb 
             fileParameterName: "file", //上传文件时文件的参数名，默认file
             maxChunkRetries: 1, //最大自动失败重试上传次数
             testChunks: true, //是否开启服务器分片校验
@@ -116,23 +119,22 @@ export default {
              * 你要在这个函数中进行处理，可以跳过的情况下返回true即可。
              * @chunk 所有分片都会调用此方法， 索引offset 0, 1, 2, 3...
              * @message 后台返回的信息 字段skipUpload: true 表示已经传过了 -> 秒传, false
+             * {// 注：skipUpload 和 uploaded 是我和后台商议的字段，你要按照后台实际返回的字段名来。
+             *    skipUpload: true, 已经传过的分片, 第几个分片，插件会自动跳过这些
+             *    uploaded: [1, 2 ,3]
+             * }
              * @return true 秒传 跳过， false 上传  
              */
             checkChunkUploadedByResponse: function(chunk, message) {
-                message = JSON.stringify({
-                    uploaded: [],
-                    // uploaded: [1,2,3,4, 5, 6,7]  
-                })
+                console.log('message', message)
                 console.log('分片校验-chunk:', chunk)
-                let objMessage = JSON.parse(message) ? JSON.parse(message) : {};
-                if (objMessage.skipUpload) {
-                    return true;
-                }
+                // let objMessage = JSON.parse(message) ? JSON.parse(message) : {};
+                // if (objMessage.skipUpload) {
+                //     return true;
+                // }
+                // return (objMessage.uploaded || []).indexOf(chunk.offset + 1) >= 0
 
-                // uploaded, [1,2,3...] 已经传过的分片, 第几个分片，插件会自动跳过这些
-                // 注：skipUpload 和 uploaded 是我和后台商议的字段，你要按照后台实际返回的字段名来。
-                console.log(('分片校验结果：', objMessage.uploaded || []).indexOf(chunk.offset + 1) >= 0)
-                return (objMessage.uploaded || []).indexOf(chunk.offset + 1) >= 0
+                return false;
             },
             // 在header中添加的验证，请根据实际业务来
             headers: {
@@ -153,7 +155,6 @@ export default {
         },
         panelShow: true, //选择文件后，展示上传panel
         collapse: false,
-        isShowGlobalUploader: true,
         isShowFilePosition: true, // 是否显示文件夹位置的一列
 
         myFileList: [], // 上传的所有文件列表
@@ -166,8 +167,13 @@ export default {
 
         };
     },
-    mounted () {
-    
+    props: {
+        toggleOpenUpload: {
+            type: Function
+        }
+    },
+    mounted() {
+        
     },
     computed: {
         //Uploader实例
@@ -191,10 +197,14 @@ export default {
                         }, 0)
             return util.formatSize(size)
         },
+        isOpenUpload () {
+            return true 
+            // return this.$store.state.isOpenUpload 
+        }
+         
     },
-  watch:{
- 
-  },
+  
+  
   methods: {
     // 文件添加进来时能获取file: 名称 文件类型，大小size 相对路径 chunk id
     onFileAdded(file) {
@@ -216,37 +226,31 @@ export default {
         console.log('onFileSuccess调用', rootFile, file, response, chunk);
         // response 成功后返回的 这里返回done
         // let res = JSON.parse(response);
-        let res = response;
-        res = {
-            code: 200,
-            result: 'done', 
-            needMerge: false
-        }
-        // 服务器自定义的错误，这种错误是Uploader无法拦截的
-        if (!res.result) {
-            // console.log('onsuccess error')
-            // this.$message({ message: res.message, type: "error" }); // 待定 element-ui 转成iview
-            return;
-        }
 
-        // 如果服务端返回需要合并
-        if (res.needMerge) {
-            // api
-            //   .mergeSimpleUpload({
-            //     tempName: res.tempName,
-            //     fileName: file.name,
-            //     ...this.params
-            //   })
-            //   .then(data => {
-            //     // 文件合并成功
-            //     Bus.$emit("fileSuccess", data);
-            //   })
-            //   .catch(e => {});
-            // 不需要合并
-        } else {
-            // Bus.$emit("fileSuccess", res);
-            console.log("上传成功");
+        let dataInfo = {
+            ...file,
+            filename: file.name,
+            identifier: file.uniqueIdentifier,
+            totalSize: file.size,
+            id: file.id,
+            type: file.fileType, 
         }
+        console.log( 'dataInfo', dataInfo)
+
+        debugger
+        // 如果服务端返回需要合并
+        // if (res.needMerge){
+            mergeFile(dataInfo ).then(data => {
+                // 文件合并成功
+                console.log('data', data)
+            }).catch(e => {
+                console.log('合并error', e)
+            });
+            // 不需要合并
+        // } else {
+        //     // Bus.$emit("fileSuccess", res);
+        //     console.log("上传成功");
+        // }
     },
 
     onFileError(rootFile, file, response, chunk) {
@@ -304,11 +308,11 @@ export default {
     toggleFullScreen() {
       this.collapse = !this.collapse;
     },
-    // 最小化
+    // 最小化 关闭
     close() {
       this.uploader.cancel();
       this.panelShow = false;
-      this.isShowGlobalUploader = false
+      this.$store.commit('OPEN_UPLOAD', false)// 修改vuex 中isOpenUpload = false 则关闭弹框
     },
     error(msg) {
       this.$notify({
@@ -386,6 +390,8 @@ export default {
 <style scoped lang="scss">
 .globalupload-wrp {
     position: fixed;
+    right: 0;
+    bottom: 0;
     z-index: 20;
     width: 100%;
     height: 100%;
