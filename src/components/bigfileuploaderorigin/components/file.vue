@@ -43,7 +43,7 @@
           <!-- <span v-show="status !== 'uploading'">{{statusText}}</span> -->
           <span v-show="status !== 'uploading'">{{statusText}}</span>
           <div v-show="status === 'uploading'" class="lj-process-wrp">
-            <Progress :percent="parseInt(progressStyle.progress) " :stroke-width="5" style=" height: 20px; line-height: 30px"/>
+            <Progress :percent="parseInt(progressStyle.progress) " :stroke-width="8" style=" height: 20px; line-height: 30px"/>
             <span style="flex: 1; line-height: 20px">
               <em>{{formatedAverageSpeed}}</em>
               <i> 剩余时间:{{formatedTimeRemaining}}</i>
@@ -86,14 +86,16 @@
         type: Boolean,
         default: false
       },
+      // 后增操作项中是否显示位置
       isShowFilePosition: {
         type: Boolean,
         default: false
       },
       handleShowFilePosition: {
         type: Function
-      }
-    },
+      }, 
+      isAllPaused: Boolean  // 自定义 是否宣布暂停 重置 _actionCheck
+     },
     data () {
       return {
         response: null,
@@ -200,11 +202,11 @@
           clearTimeout(this.tid)
           this.progressingClass = ''
         }
-
-        this.$emit('onStatusChange', newStatus, ()=>{
+      }, 
+      // lj 自定义添加监听全部暂停和全部开始时 状态status 不改变的问题强制调用了_actionCheck
+      isAllPaused (newvalue, oldvalue) {
           this._actionCheck()
-        });
-      }
+      },
     },
     methods: {
       _actionCheck () {
@@ -223,7 +225,6 @@
       },
       remove () {
         this.file.cancel()
-        this.$emit('removeFile', this.file.uploader.fileList)
       },
       retry () {
         this.file.retry()
@@ -342,8 +343,8 @@
 <style>
   .uploader-file {
     position: relative;
-    height: 49px;
-    line-height: 49px;
+    height: 50px;
+    line-height: 50px;
     overflow: hidden;
     border-bottom: 1px solid #cdcdcd;
   }
@@ -443,7 +444,7 @@
   }
   .uploader-file-status {
     width: 35%;
-    /* text-indent: 20px; */
+    text-indent: 10px;
   }
   .uploader-file-actions {
     width: 15%;

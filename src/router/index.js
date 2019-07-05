@@ -30,10 +30,10 @@ const router = new VueRouter ({
                     path: '/chinamap',
                     component: () => import('@/views/chinaMap/index')
                 },
-                {
-                    path: '/npmbag',
-                    component: () => import('@/views/npmbag/index')
-                },
+                // {
+                //     path: '/npmbag',
+                //     component: () => import('@/views/npmbag/index')
+                // },
 
             ]
         },
