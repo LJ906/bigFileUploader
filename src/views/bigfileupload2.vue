@@ -19,49 +19,47 @@
                 class="uploader-app">
                 <uploader-unsupport></uploader-unsupport>
 
-                <div>
+                <div :class="{'padding10': collapse}">
+                    <!-- 上传按钮 -->
+                    <div class="uploader-title-wrp" @dblclick="collapse = !collapse">
+                        <uploader-btn :directory="true" v-if="!collapse">选文件夹</uploader-btn>
+                        <template v-if="collapse">
+                            <uploader-btn id="global-uploader-btn uploder-btn" :attrs="attrs" ref="uploadBtn" > + 选择文件</uploader-btn>
+                            <Button size="small" @click="hanldeAllPaused" class="operBtn" type="warning">全部暂停</Button>
+                            <Button size="small" @click="hanldeAllUpload" class="operBtn" type="primary">全部开始</Button>
+                            <Button size="small" @click="handleAllDelete" class="operBtn" type="error">全部删除</Button>
+                        </template>
 
-               
-                <!-- 上传按钮 -->
-                <div class="uploader-title-wrp" @dblclick="collapse = !collapse">
-                    <uploader-btn :directory="true" v-if="!collapse">选文件夹</uploader-btn>
-                    <template v-if="collapse">
-                        <uploader-btn id="global-uploader-btn uploder-btn" :attrs="attrs" ref="uploadBtn" > + 选择文件</uploader-btn>
-                        <Button size="small" @click="hanldeAllPaused" class="operBtn" type="warning">全部暂停</Button>
-                        <Button size="small" @click="hanldeAllUpload" class="operBtn" type="primary">全部开始</Button>
-                        <Button size="small" @click="handleAllDelete" class="operBtn" type="error">全部删除</Button>
-                    </template>
-
-                    <!-- 全屏 -->
-                    <div class="operate">
-                        <Button size="small" @click="toggleFullScreen" :icon="collapse ? 'md-expand' : 'md-contract'" type="text"></Button>
-                        <Button size="small" @click="close" icon="md-close" type="text"></Button>
+                        <!-- 全屏 -->
+                        <div class="operate">
+                            <Button size="small" @click="toggleFullScreen" :icon="collapse ? 'md-expand' : 'md-contract'" type="text"></Button>
+                            <Button size="small" @click="close" icon="md-close" type="text"></Button>
+                        </div>
                     </div>
-                </div>
 
-                <!-- 进度条 -->
-                <div class="common-config-process">
-                    <span class="config-progress-title">上传总进度：</span>
-                    <Progress :percent="formatPercent(totalProgress)" :stroke-width="5" class="total-progress"/>
-                    <span style="width: 100px; margin-right: 10px">{{formatedAverageSpeed}}</span> 
-                    <!-- <span style="width: 60px; margin-right: 10px"> {{totalSize}}</span> -->
-                    <div class="oper-btn" v-show="!collapse">
-                        <uploader-btn id="global-uploader-btn uploder-btn" :attrs="attrs" ref="uploadBtn" >+ 选择文件</uploader-btn>
+                    <!-- 进度条 -->
+                    <div class="common-config-process">
+                        <span class="config-progress-title">上传总进度：</span>
+                        <Progress :percent="formatPercent(totalProgress)" :stroke-width="5" class="total-progress"/>
+                        <span style="width: 100px; margin-right: 10px">{{formatedAverageSpeed}}</span> 
+                        <!-- <span style="width: 60px; margin-right: 10px"> {{totalSize}}</span> -->
+                        <div class="oper-btn" v-show="!collapse">
+                            <uploader-btn id="global-uploader-btn uploder-btn" :attrs="attrs" ref="uploadBtn" >+ 选择文件</uploader-btn>
 
-                        <Button size="small" @click="hanldeAllPaused" class="operBtn" type="warning">全部暂停</Button>
-                        <Button size="small" @click="hanldeAllUpload" class="operBtn" type="primary">全部开始</Button>
-                        <Button size="small" @click="handleAllDelete" class="operBtn" type="error">全部删除</Button>
+                            <Button size="small" @click="hanldeAllPaused" class="operBtn" type="warning">全部暂停</Button>
+                            <Button size="small" @click="hanldeAllUpload" class="operBtn" type="primary">全部开始</Button>
+                            <Button size="small" @click="handleAllDelete" class="operBtn" type="error">全部删除</Button>
+                        </div>
                     </div>
-                </div>
 
-                <div class="common-config-count" v-show="!collapse">
-                    <!-- <span class="oper-btn-left"> -->
-                    <!-- 共有 <span class="font-blue">{{totalFileCount}}</span>  个上传任务  -->
-                    <!-- </span> -->
-                    <span class="oper-btn-right">
-                        共有 <span class="font-blue">{{totalFileCount}}</span>  个上传任务 
-                    </span>
-                </div>
+                    <div class="common-config-count" v-show="!collapse">
+                        <!-- <span class="oper-btn-left"> -->
+                        <!-- 共有 <span class="font-blue">{{totalFileCount}}</span>  个上传任务  -->
+                        <!-- </span> -->
+                        <span class="oper-btn-right">
+                            共有 <span class="font-blue">{{totalFileCount}}</span>  个上传任务 
+                        </span>
+                    </div>
                 </div>
                 <uploader-list v-show="panelShow" ref="uploaderList">
                     <div class="file-panel" slot-scope="props" :class="{'collapse': collapse}">
@@ -128,7 +126,7 @@ export default {
                  * @return true 秒传 跳过， false 上传  
                  */
                 checkChunkUploadedByResponse: function(chunk, message) {
-                    if(message == 'found') return true // 待定
+                    // if(message == 'found') return true // 待定
                     let objMessage = JSON.parse(message) ? JSON.parse(message) : {};
                     if (objMessage.skipUpload) {
                         return true;
@@ -233,9 +231,7 @@ export default {
             }
         
             // 如果服务端返回需要合并
-            // if (response.needMerge && response.status == 'done'){
-            if (res.status == 'done'){
-                // 修改提示语句
+            if (res.needMerge && res.state == 0){
                 try {
                     const mergeRes = await mergeFile(dataInfo);
                     if (mergeRes.msg == '合并成功' && data.state == 0) {
@@ -243,6 +239,7 @@ export default {
                     }
 
                 } catch (e) {
+
                     console.log('合并error', e)
                 }
             } else {
