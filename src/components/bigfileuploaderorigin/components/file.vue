@@ -43,8 +43,8 @@
           <!-- <span v-show="status !== 'uploading'">{{statusText}}</span> -->
           <span v-show="status !== 'uploading'">{{statusText}}</span>
           <div v-show="status === 'uploading'" class="lj-process-wrp">
-            <Progress :percent="parseInt(progressStyle.progress) " :stroke-width="8" style=" height: 20px; line-height: 30px"/>
-            <span style="flex: 1; line-height: 20px">
+            <Progress :percent="parseInt(progressStyle.progress) " :stroke-width="5" style=" height: 20px; line-height: 30px"/>
+            <span style="flex: 1; line-height: 25px">
               <em>{{formatedAverageSpeed}}</em>
               <i> 剩余时间:{{formatedTimeRemaining}}</i>
             </span>
@@ -437,7 +437,8 @@
   }
   .uploader-file-size {
     width: 8%;
-    text-indent: 10px;
+    /* text-indent: 10px; */
+    padding-left: 10px;
   }
   .uploader-file-meta {
     width: 1%;

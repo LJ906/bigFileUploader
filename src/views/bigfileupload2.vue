@@ -104,8 +104,8 @@ export default {
     data() {
         return {
             options: {
-                target: "/upload/chunk", // 目标上传 URL
-                // target: "//localhost:3000/upload", // 目标上传 URL
+                // target: "/upload/chunk", // 目标上传 URL
+                target: "//localhost:3000/upload", // 目标上传 URL
                 // chunkSize: 1 * 1024 * 1024, //分块大小1m 插件会根据你设置的分块的大小自动计算出 chunkNumber当前第几块 totalChunk 总块数
                 chunkSize: 512 * 1024, //分块大小10kb 
                 fileParameterName: "file", //上传文件时文件的参数名，默认file
@@ -379,7 +379,7 @@ export default {
         bottom: 15px;
         width: 526px;
         height: auto;
-        padding: 10px;
+        padding: 0px;
         border: 1px solid #e2e2e2;
     }
     .padding10 {
