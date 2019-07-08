@@ -1,13 +1,13 @@
 <template>
     <div>
          中国地图
-        <my-map :option="option" id="chinaMap"  ></my-map>
+        <my-map :option="option" id="chinaMap" ref="chinaMap" ></my-map>
     </div>
 </template>
 
 <script>
 import echarts from 'echarts'
-import chinaJs from 'echarts/map/js/china.js'
+import 'echarts/map/js/china.js'
 
 import MyMap from '@/components/map'
 
@@ -17,12 +17,31 @@ export default {
     },
     data () {
         return {
-            chinaMap: null,
             option: {}
+        }
+    },
+    computed: {
+        // echarts实例
+        chinaMap () {
+            return this.$refs.chinaMap.chart
         }
     },
     mounted() {
         this.initMap()
+        this.$nextTick (res =>  {
+            // console.log('this.chinaMap实例', this.chinaMap)
+             this.chinaMap.on('click', 'series', (res)=> {
+                // console.log('clicked res === ',res)
+                let {componentType, seriesType} = res // geo /series/line
+                // 如果点的是城市的点则触发事件
+                if (componentType == 'series' && seriesType === 'effectScatter'  ) {
+                    console.log('城市点 == ：', res.name, res.data)
+                } else {
+                    console.log('点击的路线', res.data)
+                }
+
+             })
+        })
     },  
     methods: {
         initMap () {
@@ -248,7 +267,8 @@ export default {
     	                position: 'right',
     	                formatter: '{b}'
     	            }
-    	        },
+                },
+                symbol: 'pin', // 水波纹图层的 图标 可以改
     	        symbolSize: function (val) {
     	            return val[2] / 8;
     	        },
@@ -293,8 +313,39 @@ export default {
     	    legend: {
     	        orient: 'vertical',
     	        top: 'bottom',
-    	        left: 'right',
-    	        data:['西安 Top3', '西宁 Top3', '银川 Top3'],
+    	        left: 'left',
+    	        // data:['西安 Top3', '西宁 Top3', '银川 Top3'],
+                data:[
+                    {
+                      name: '西安 Top3',
+                        // 强制设置图形为圆。
+                        // icon: 'image://url, // 图例的图标可以是img 
+                        icon: planePath,
+                        // 设置文本为红色
+                        textStyle: {
+                            color: 'red'
+                        }  
+                    },
+                    {
+                      name: '西宁 Top3',
+                        // 强制设置图形为圆。
+                        icon: 'roundRect',
+                        // 设置文本为红色
+                        textStyle: {
+                            color: 'green'
+                        }  
+                    },
+                    {
+                      name: '银川 Top3',
+                        // 强制设置图形为圆。
+                        icon: 'circle',
+                        // 设置文本为红色
+                        textStyle: {
+                            color: 'blue'
+                        }  
+                    }
+                ],
+                
     	        textStyle: {
     	            color: '#fff'
     	        },
@@ -324,6 +375,19 @@ export default {
     	};
             // 更新option
             this.option = option
+
+
+
+            this.$nextTick( ()=> {
+                // 切换图例 
+                this.chinaMap.on('legendselectchanged', function (params) {
+                    // console.log('图例的状态==', params)
+                    // 获取点击图例的选中状态
+                    var isSelected = params.selected[params.name];
+                    console.log((isSelected ? '选中了' : '取消选中了') + '图例' + params.name);
+                    console.log('所有图例的状态',params.selected);
+                });
+            })
 
         }
     } 

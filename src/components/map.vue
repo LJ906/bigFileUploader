@@ -1,5 +1,5 @@
 <template>
-    <div :ref="id" :style="{width:width, height:width}" ></div>
+    <div :ref="id" :style="{width:width, height:width}" @click="$emit('click', $event)" ></div>
 </template>
 
 <script>

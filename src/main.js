@@ -9,8 +9,8 @@ import uploader from '@/components/bigfileuploaderorigin'
 import _ from 'lodash'
 
 // 测试Git项目装包
-import npminstallgit from 'npm-install-git-project'
-Vue.use(npminstallgit);
+// import npminstallgit from 'npm-install-git-project'
+// Vue.use(npminstallgit);
 
 // 测试Git项目装包
 // import npmGit from 'npm-git'
