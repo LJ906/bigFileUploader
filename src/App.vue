@@ -1,16 +1,20 @@
 <template>
   <div id="app">
     <router-view></router-view>
-    <!-- <bigfileupload2></bigfileupload2> -->
+    <global-upload></global-upload>
+
   </div>
 </template>
 
 <script>
- import bigfileupload2 from '@/views/bigfileupload2'
+import GlobalUpload from '@/components/globalUpload/globalUpload'
+
+//  import bigfileupload2 from '@/views/bigfileupload2'
 export default {
   name: 'app',
   components: {
-    bigfileupload2
+    // bigfileupload2,
+    GlobalUpload
   },
   
  

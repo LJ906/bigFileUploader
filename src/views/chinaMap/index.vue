@@ -207,7 +207,7 @@ export default {
                 return res;
     	    };
 
-    	var color = ['#a6c84c', '#ffa022', '#46bee9'];//航线的颜色
+        var color = ['#a6c84c', '#ffa022', '#46bee9'];//航线的颜色
     	var series = [];
     	[['西安', XAData], ['西宁', XNData], ['银川', YCData]].forEach(function (item, i) {  
     	    series.push({
@@ -283,7 +283,8 @@ export default {
     	        data: item[1].map(function (dataItem) {
     	            return {
     	                name: dataItem[1].name,
-    	                value: geoCoordMap[dataItem[1].name].concat([dataItem[1].value])
+                        value: geoCoordMap[dataItem[1].name].concat([dataItem[1].value]), 
+                        
     	            };
     	        })
     	    });

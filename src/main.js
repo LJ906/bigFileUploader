@@ -5,7 +5,10 @@ import store from '@/store'
 import iView from 'iview'
 import 'iview/dist/styles/iview.css'
 // import uploader from 'vue-simple-uploader'
-import uploader from '@/components/bigfileuploaderorigin'
+// import uploader from '@/components/bigfileuploaderorigin'
+import uploader from '@/components/globalUpload/components/vueUploader'
+Vue.use(uploader)
+
 import _ from 'lodash'
 
 // 测试Git项目装包
@@ -13,8 +16,8 @@ import _ from 'lodash'
 // Vue.use(npminstallgit);
 
 // 测试Git项目装包
-// import npmGit from 'npm-git'
-// Vue.use(npmGit);
+import npmGit from 'npm-git'
+Vue.use(npmGit);
 
 // 测试本地本项目装包
 // import Fuyong from './components/fuyong/index.js'
@@ -22,7 +25,6 @@ import _ from 'lodash'
 
 
 Vue.use(iView)
-Vue.use(uploader)
 
 Vue.config.productionTip = false
 

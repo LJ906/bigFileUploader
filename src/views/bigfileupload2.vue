@@ -42,10 +42,9 @@
                         <span class="config-progress-title">上传总进度：</span>
                         <Progress :percent="formatPercent(totalProgress)" :stroke-width="5" class="total-progress"/>
                         <span style="width: 100px; margin-right: 10px">{{formatedAverageSpeed}}</span> 
-                        <!-- <span style="width: 60px; margin-right: 10px"> {{totalSize}}</span> -->
+                        <span style="width: 60px; margin-right: 10px"> {{totalSize}}</span>
                         <div class="oper-btn" v-show="!collapse">
                             <uploader-btn id="global-uploader-btn uploder-btn" :attrs="attrs" ref="uploadBtn" >+ 选择文件</uploader-btn>
-
                             <Button size="small" @click="hanldeAllPaused" class="operBtn" type="warning">全部暂停</Button>
                             <Button size="small" @click="hanldeAllUpload" class="operBtn" type="primary">全部开始</Button>
                             <Button size="small" @click="handleAllDelete" class="operBtn" type="error">全部删除</Button>
@@ -104,10 +103,10 @@ export default {
     data() {
         return {
             options: {
-                // target: "/upload/chunk", // 目标上传 URL
-                target: "//localhost:3000/upload", // 目标上传 URL
-                // chunkSize: 1 * 1024 * 1024, //分块大小1m 插件会根据你设置的分块的大小自动计算出 chunkNumber当前第几块 totalChunk 总块数
-                chunkSize: 512 * 1024, //分块大小10kb 
+                target: "/upload/chunk", // 目标上传 URL
+                // target: "//localhost:3000/upload", // 目标上传 URL
+                chunkSize: 1 * 1024 * 1024, //分块大小1m 插件会根据你设置的分块的大小自动计算出 chunkNumber当前第几块 totalChunk 总块数
+                // chunkSize: 512 * 1024, //分块大小10kb 
                 fileParameterName: "file", //上传文件时文件的参数名，默认file
                 maxChunkRetries: 1, //最大自动失败重试上传次数
                 testChunks: true, //测试每个块是否在服务端已经上传了，主要用来实现秒传、跨浏览器上传等，默认true
@@ -160,7 +159,7 @@ export default {
             currentSpeed: 0, // 当前上传速度，未格式化 
 
             isAllPaused: false, // 全部暂停 传给组件重置 _actionCheck
-            isOpenUpload: true, // 待定， 正式时删除
+            // isOpenUpload: true, // 待定， 正式时删除
             // 没用到
             sizeUploaded: 0, // 总的上传的文件大小 
             successCount: 0, // 已传成功的文件个数
@@ -191,9 +190,9 @@ export default {
             return util.formatSize(size)
         },
         // 正式时放开
-        // isOpenUpload () {
-        //     return this.$store.state.isOpenUpload  // 正式从store 中获取  待定
-        // }
+        isOpenUpload () {
+            return this.$store.state.isOpenUpload  // 正式从store 中获取  待定
+        }
          
     },
  
@@ -219,14 +218,13 @@ export default {
          * @chunk {Object}     最后一个chunk 吧
          */
         async onFileSuccess(rootFile, file, response, chunk) {
-            console.log('onFileSuccess response ===', response);
             let res = JSON.parse(response) || {}
+            console.log('onFileSuccess res ===', res);
             let dataInfo = {
                 ...file,
                 filename: file.name,
                 identifier: file.uniqueIdentifier,
                 totalSize: file.size,
-                id: file.id,
                 type: file.fileType, 
             }
         
@@ -239,13 +237,12 @@ export default {
                     }
 
                 } catch (e) {
-
                     console.log('合并error', e)
                 }
             } else {
             // 不需要合并
                 // Bus.$emit("fileSuccess", res);
-                console.log("上传成功 没合并");
+                console.log("上传成功 不需要合并");
             }
         },
         // 失败后
@@ -291,7 +288,7 @@ export default {
                 );
 
                 file.uniqueIdentifier = md5;
-                file.resume(); // 继续上传
+                // file.resume(); // 继续上传
             };
             // 可能会出错， 因为大文件会消耗内存消耗
             fileReader.onerror = function() {
@@ -305,7 +302,7 @@ export default {
         },
 
         onFileComplete () {
-            console.log('complete')
+            console.log('complete', arguments)
         },
         // 切换全屏
         toggleFullScreen() {
@@ -315,7 +312,7 @@ export default {
         close() {
             this.uploader.cancel();
             this.panelShow = false;
-            this.isOpenUpload = false; // 待定 正式删除，使用下方的方式
+            // this.isOpenUpload = false; // 待定 正式删除，使用下方的方式
             this.$store.commit('OPEN_UPLOAD', false)// 修改vuex 中isOpenUpload = false 则关闭弹框
         },
         
