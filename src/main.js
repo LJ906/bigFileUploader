@@ -10,7 +10,8 @@ import uploader from '@/components/globalUpload/components/vueUploader'
 Vue.use(uploader)
 
 import _ from 'lodash'
-
+ 
+ 
 // 测试Git项目装包
 // import npminstallgit from 'npm-install-git-project'
 // Vue.use(npminstallgit);

@@ -1,3 +1,5 @@
+const webpack = require('webpack')
+
 module.exports = {
     // 基本路径
     publicPath: './',
@@ -13,6 +15,13 @@ module.exports = {
     // webpack配置
     configureWebpack: () => {
         // 配置参考： https://cli.vuejs.org/zh/guide/webpack.html#%E7%AE%80%E5%8D%95%E7%9A%84%E9%85%8D%E7%BD%AE%E6%96%B9%E5%BC%8F
+        plugins: [
+            new webpack.ProvidePlugin({
+              $:"jquery",
+              jQuery:"jquery",
+              "windows.jQuery":"jquery"
+            })
+          ]
     },
     // 修改 Loader 选项
     chainWebpack: () => {
@@ -63,6 +72,5 @@ module.exports = {
     },
     // 第三方插件配置
     pluginOptions: {
-        // ...
     },
 };

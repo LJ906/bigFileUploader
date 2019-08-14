@@ -47,6 +47,11 @@ const router = new VueRouter ({
                     path: '/npmbag',
                     component: () => import('@/views/npmbag/index')
                 },
+                {
+                    path: '/searchbar',
+                    component: () => import('@/views/searchBar')
+                },
+
 
             ]
         },
