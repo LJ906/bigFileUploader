@@ -96,17 +96,17 @@ import { ACCEPT_CONFIG } from "./js/config";
 import SparkMD5 from "spark-md5";
 import util from './js/util';
 import { mergeFile } from './api';
-import $ from "jquery";
+
 export default {
     data() {
         return {
             options: {
                 target: "/upload/chunk", // 目标上传 URL
                 // target: "//localhost:3000/upload", 
-                chunkSize: 2* 1024 * 1024,   //分块大小0.5M 
-                fileParameterName: "file",   //上传文件时文件的参数名，默认file
-                maxChunkRetries: 1,          //最大自动失败重试上传次数
-                testChunks: true,            //测试每个块是否在服务端已经上传了，主要用来实现秒传、跨浏览器上传等，默认true
+                chunkSize: 512 * 1024, //分块大小0.5M 
+                fileParameterName: "file", //上传文件时文件的参数名，默认file
+                maxChunkRetries: 1, //最大自动失败重试上传次数
+                testChunks: true, //测试每个块是否在服务端已经上传了，主要用来实现秒传、跨浏览器上传等，默认true
                 simultaneousUploads: 3, 
                 checkChunkUploadedByResponse: function(chunk, message) {
                     let objMessage = JSON.parse(message) ? JSON.parse(message) : {};
@@ -131,16 +131,15 @@ export default {
                 paused: "暂停中",
                 waiting: "等待上传"
             },
-            params: {}, // 参数
             // 自定义字段
-            panelShow: true,          // 选择文件后，展示上传panel
-            collapse: true,           // 默认折叠状态
+            panelShow: true, //选择文件后，展示上传panel
+            collapse: true, // 默认折叠状态
             isShowFilePosition: true, // 是否显示文件夹位置的一列 alse 不显示
-            myFileList: [],           // 上传的所有文件列表
-            totalProgress: 0,         // 总上传进度百分比，未格式化成小数
-            currentSpeed: 0,          // 当前上传速度，未格式化 
-            needActionCheck: false,   // 全部暂停 传给组件重置 _actionCheck
-            // isOpenUpload: true,    // 待定， 正式时删除
+            myFileList: [], // 上传的所有文件列表
+            totalProgress: 0, // 总上传进度百分比，未格式化成小数
+            currentSpeed: 0, // 当前上传速度，未格式化 
+            needActionCheck: false, // 全部暂停 传给组件重置 _actionCheck
+            // isOpenUpload: true, // 待定， 正式时删除
         };
     },
     computed: {
@@ -167,12 +166,14 @@ export default {
         isOpenUpload () {
             return this.$store.state.isOpenUpload;
         }
+         
     },
     methods: {
         onFileAdded(file) {
             this.panelShow = true;
             this.myFileList = this.uploader.fileList;
-            this.computeMD52(file);
+            // 计算MD5
+            this.computeMD5(file);
         },
         // 文件过程中
         onFileProgress(rootFile, file, chunk) {
@@ -188,6 +189,7 @@ export default {
          * @chunk {Object}     最后一个chunk 吧
          */
         async onFileSuccess(rootFile, file, response, chunk) {
+            console.log('onFileSuccess');
             let res = JSON.parse(response) || {}
             let dataInfo = {
                 ...file,
@@ -199,19 +201,23 @@ export default {
             }
         
             // 如果服务端返回需要合并
-            if (res.needMerge){
-                 this.statusSet(file.id, 'merging');
+            if (res.needMerge && res.state == 0){
+                console.log('合并了')
                 try {
                     const mergeRes = await mergeFile(dataInfo);
-                    if (mergeRes.data.msg == '合并成功') {
-                        this.statusRemove(file.id);
+                    if (mergeRes.msg == '合并成功' && data.state == 0) {
+                        console.log('合并成功')
                     } else {
-                        this.statusSet(file.id, 'mergefailed');
+                        // console.log('合并失败；', mergeRes.msg)
                     }
-                } catch (error) {
-                    this.statusSet(file.id, 'mergefailed');
+                } catch (e) {
+                    console.log('合并error', e)
                 }
-            }  
+            } else {
+            // 不需要合并
+                // Bus.$emit("fileSuccess", res);
+                console.log("上传成功 不需要合并");
+            }
         },
         // 失败后
         onFileError(rootFile, file, response, chunk) {
@@ -243,7 +249,6 @@ export default {
                 }
                 
                 md5 = SparkMD5.ArrayBuffer.hash(e.target.result);
-                console.log(`MD5计算完毕：${file.name} \nMD5：${md5}  大小:${file.size} 用时：${new Date().getTime() - time} ms`);
 
                 // 添加额外的参数
                 this.uploader.opts.query = {
@@ -251,8 +256,8 @@ export default {
                 }
 
                 file.uniqueIdentifier = md5;
-            };
                 file.resume(); // 继续上传
+            };
             // 可能会出错， 因为大文件会消耗内存消耗
             fileReader.onerror = function() {
                 this.$Notice.warning({
@@ -263,108 +268,21 @@ export default {
                 })
             };
         },
-        // 修改md5 start
-        computeMD52(file) {
-            let fileReader = new FileReader();
-            let time = new Date().getTime();
-            let blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice;
-            let currentChunk = 0;
-            const chunkSize = 10 * 1024 * 1000;
-            let chunks = Math.ceil(file.size / chunkSize);
-            let spark = new SparkMD5.ArrayBuffer();
-            // 文件状态设为"计算MD5"
-            this.statusSet(file.id, 'md5');
-            file.pause();
-            loadNext();
-            fileReader.onload = (e => {
-                spark.append(e.target.result);
-                if (currentChunk < chunks) {
-                    currentChunk++;
-                    loadNext();
-                    // 实时展示MD5的计算进度
-                    this.$nextTick(() => {
-                        console.log(((currentChunk/chunks)*100).toFixed(0)+'%')
-                        $(`.myStatus_${file.id}`).text('校验MD5 '+ ((currentChunk/chunks)*100).toFixed(0)+'%')
-                    })
-                } else {
-                    let md5 = spark.end();
-                    this.computeMD5Success(md5, file);
-                    console.log(`MD5计算完毕：${file.name} \nMD5：${md5} \n分片：${chunks} 大小:${file.size} 用时：${new Date().getTime() - time} ms`);
-                }
-            });
-            fileReader.onerror = function () {
-                // this.error(`文件${file.name}读取出错，请检查该文件`)
-                file.cancel();
-            };
-            function loadNext() {
-                let start = currentChunk * chunkSize;
-                let end = ((start + chunkSize) >= file.size) ? file.size : start + chunkSize;
-                fileReader.readAsArrayBuffer(blobSlice.call(file.file, start, end));
-            }
+        onFileComplete () {
+            console.log('complete')
         },
-        computeMD5Success(md5, file) {
-            // 将自定义参数直接加载uploader实例的opts上
-            Object.assign(this.uploader.opts, {
-                query: {
-                    ...this.params,
-                }
-            })
-            file.uniqueIdentifier = md5;
-            file.resume();
-            this.statusRemove(file.id);
-        },
-        /**
-         * 新增的自定义的状态: 'md5'、'transcoding'、'failed'
-         * @param id
-         * @param status
-         */
-        statusSet(id, status) {
-            let statusMap = {
-                md5: {
-                    text: '校验MD5',
-                    bgc: '#fff'
-                },
-                merging: {
-                    text: '合并中',
-                    bgc: '#e2eeff'
-                },
-                transcoding: {
-                    text: '转码中',
-                    bgc: '#e2eeff'
-                },
-                failed: {
-                    text: '上传失败',
-                    bgc: '#e2eeff'
-                },
-                mergefailed: {
-                    text: '合并失败',
-                    bgc: '#e2eeff'
-                }
-            }
-            this.$nextTick(() => {
-                $(`<p class="myStatus_${id}"></p>`).appendTo(`.file_${id} .uploader-file-status`).css({
-                    'position': 'absolute',
-                    'top': '0',
-                    'left': '0',
-                    'right': '0',
-                    'bottom': '1px',
-                    'zIndex': '1',
-                    'backgroundColor': statusMap[status].bgc
-                }).text(statusMap[status].text);
-            })
-        },
-        statusRemove(id) {
-            this.$nextTick(() => {
-                $(`.myStatus_${id}`).remove();
-            })
-        },
+        // 切换全屏
         toggleFullScreen() {
             this.collapse = !this.collapse;
         },
+        // 最小化 关闭
         close() {
             this.uploader.cancel();
+            // this.panelShow = false;
+            // this.isOpenUpload = false; // 待定 正式删除，使用下方的方式
             this.$store.commit('OPEN_UPLOAD', false)
         },
+        
         /**
          * 小数转成百分比
          * @decimalNum 是小数的
@@ -382,10 +300,12 @@ export default {
         hanldeAllUpload() {
             this.uploader.resume(); 
             this.needActionCheck = true;
+            console.log('全部开始')
         },
         //  全部删除功能
         handleAllDelete () {
             this.uploader.cancel(); // 取消上传并上传所有文件
+            
             this.currentSpeed = 0;  // this.uploader.currentSpeed 删除时不是0
             this.totalProgress = this.uploader.progress() ; // 0
             this.myFileList = this.uploader.fileList ;// []

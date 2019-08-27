@@ -4,13 +4,7 @@ import VueRouter from 'vue-router'
 
 Vue.use(VueRouter)
 
-const UploadFile = () => import('@/views/uploadFile')
-
-const Bigfileupload = () => import(/* webpackChunkName:"Bigfileupload"*/ '@/views/bigfileupload.vue')
 const Bigfileupload2 = () => import(/* webpackChunkName:"Bigfileupload2"*/ '@/views/bigfileupload2.vue')
-const Bigfileupload3 = () => import(/* webpackChunkName:"Bigfileupload3"*/ '@/views/bigfileupload3.vue')
-// const GlobalUpload = () => import('@/components/globalupload/index')
-// const GlobalUpload = () => import('@/components/globalupload/index')
 
 const router = new VueRouter ({
     routes: [
@@ -54,26 +48,6 @@ const router = new VueRouter ({
 
 
             ]
-        },
-        {
-            path: '/fileupload',
-            component: UploadFile
-        },
-        // {
-        //     path: '/globalupload',
-        //     component: GlobalUpload
-        // },
-        {
-            path: '/bigfileupload',
-            component: Bigfileupload
-        },
-        // {
-        //     path: '/bigfileupload2',
-        //     component: Bigfileupload2
-        // },
-        {
-            path: '/bigfileupload3',
-            component: Bigfileupload3
         },
         {
             path: '/lineChart',

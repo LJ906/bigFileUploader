@@ -40,9 +40,8 @@
         <!-- <div class="uploader-file-meta"> </div> -->
         <!-- 添加进度条 -->
         <div class="uploader-file-status">
-          <!-- <span v-show="status !== 'uploading'">{{statusText}}</span> -->
-          <span v-show="status == 'uploading'">{{statusText}}</span>
-          <div v-show="status !== 'uploading'" class="lj-process-wrp">
+          <span v-show="status !== 'uploading'">{{statusText}}</span>
+          <div v-show="status == 'uploading'" class="lj-process-wrp">
             <Progress :percent="parseInt(progressStyle.progress) " :stroke-width="5" style=" height: 20px; line-height: 30px"/>
             <span style="flex: 1; line-height: 25px">
               <em>{{formatedAverageSpeed}}</em>
