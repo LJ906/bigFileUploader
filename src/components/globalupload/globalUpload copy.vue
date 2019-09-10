@@ -2,7 +2,7 @@
     <div id="global-uploader" 
         class="globalupload-wrp" 
         :class="{'collapse': collapse, 'boder-e': collapse}" 
-        v-if="isOpenUpload"
+        v-show="isOpenUpload"
     >
         <!-- 上传 -->
         <uploader
@@ -16,43 +16,24 @@
             @file-error="onFileError"
             @file-success="onFileSuccess"
             @file-complete="onFileComplete" 
+            @complete="onComplete"
             class="uploader-app">
             <uploader-unsupport></uploader-unsupport>
-
             <div :class="{'padding10': collapse}">
                 <!-- 上传按钮 -->
                 <div class="uploader-title-wrp" @dblclick="collapse = !collapse">
                     <!-- <uploader-btn :directory="true" v-if="!collapse">选文件夹</uploader-btn> -->
-                    <template v-if="collapse">
-                        <uploader-btn id="global-uploader-btn uploder-btn" :attrs="attrs" ref="uploadBtn" >+ 选择文件</uploader-btn>
-                        <Button size="small" @click="hanldeAllPaused" class="operBtn" type="warning">全部暂停</Button>
-                        <Button size="small" @click="hanldeAllUpload" class="operBtn" type="primary">全部开始</Button>
-                        <Button size="small" @click="handleAllDelete" class="operBtn" type="error">全部删除</Button>
-                    </template>
-
+                    <uploader-btn id="global-uploader-btn" :attrs="attrs" ref="uploadBtn" >+ 选择文件</uploader-btn>
+                    <Button size="small" @click="hanldeAllPaused" class="operBtn" type="warning">全部暂停</Button>
+                    <Button size="small" @click="hanldeAllUpload" class="operBtn" type="primary">全部开始</Button>
+                    <Button size="small" @click="handleAllDelete" class="operBtn" type="error">全部删除</Button>
                     <!-- 全屏 -->
                     <div class="operate">
-                        <Button size="small" @click="toggleFullScreen" :icon="collapse ? 'md-expand' : 'md-contract'" type="text"></Button>
-                        <Button size="small" @click="close" icon="md-close" type="text"></Button>
+                        <i :class="['iconfont', {'icon-fullscreen' : collapse , 'icon-fullscreen-exit': !collapse}]"  @click="toggleFullScreen" ></i>
+                        <!-- <Button size="small" @click="toggleFullScreen" :icon="collapse ? 'md-expand' : 'md-contract'" type="text">展开</Button> -->
+                        <Button size="small" @click="close" icon="md-close" type="text">X</Button>
                     </div>
                 </div>
-                <!-- 进度条 -->
-                <div class="common-config-process">
-                    <!-- 进度条 -->
-                    <!-- <span class="config-progress-title">上传总进度：</span>
-                    <Progress :percent="formatPercent(totalProgress)" :stroke-width="5" class="total-progress"/>
-                    <span style="width: 100px; margin-right: 10px">{{formatedAverageSpeed}}</span>  -->
-
-                    <!-- <span style="width: 60px; margin-right: 10px"> {{totalSize}}</span> -->
-                    <div class="oper-btn" v-show="!collapse">
-                        <uploader-btn id="global-uploader-btn uploder-btn" :attrs="attrs" ref="uploadBtn" >+ 选择文件</uploader-btn>
-
-                        <Button size="small" @click="hanldeAllPaused" class="operBtn" type="warning">全部暂停</Button>
-                        <Button size="small" @click="hanldeAllUpload" class="operBtn" type="primary">全部开始</Button>
-                        <Button size="small" @click="handleAllDelete" class="operBtn" type="error">全部删除</Button>
-                    </div>
-                </div>
-
                 <div class="common-config-count" v-show="!collapse">
                     <span class="oper-btn-right">
                         共有 <span class="font-blue">{{totalFileCount}}</span>  个上传任务 
@@ -95,52 +76,70 @@
 import { ACCEPT_CONFIG } from "./js/config";
 import SparkMD5 from "spark-md5";
 import util from './js/util';
-import { mergeFile } from './api';
+import { mergeFile } from '@/api/file';
+import Bus from '@/utils/bus'
+import $ from "jquery";
 
 export default {
     data() {
         return {
             options: {
-                target: "/upload/chunk", // 目标上传 URL
-                // target: "//localhost:3000/upload", 
-                chunkSize: 512 * 1024, //分块大小0.5M 
-                fileParameterName: "file", //上传文件时文件的参数名，默认file
-                maxChunkRetries: 1, //最大自动失败重试上传次数
-                testChunks: true, //测试每个块是否在服务端已经上传了，主要用来实现秒传、跨浏览器上传等，默认true
+                withCredentials: true,
+                // target: process.env.BASE_UPLOAD_API + '/a/upload/chunk', //  目标上传 URL"http://10.102.17.57:8082/HCL504/a/upload/chunk"
+                target: "//localhost:3000/upload", 
+                chunkSize: 2 * 1024 * 1024,  //分块大小2M 
+                fileParameterName: "file",   //上传文件时文件的参数名，默认file
+                maxChunkRetries: 1,          //最大自动失败重试上传次数
+                testChunks: true,            //测试每个块是否在服务端已经上传了，主要用来实现秒传、跨浏览器上传等，默认true
                 simultaneousUploads: 3, 
-                checkChunkUploadedByResponse: function(chunk, message) {
-                    let objMessage = JSON.parse(message) ? JSON.parse(message) : {};
+                // 服务器分片校验函数，秒传及断点续传基础, 返回true已经传过秒传(跳过上传)，返回false 则上传post请求
+                checkChunkUploadedByResponse: function(chunk, message = {}) {
+                    let objMessage = JSON.parse(message);
                     if (objMessage.skipUpload) {
                         return true;
                     }
                     return (objMessage.uploaded || []).indexOf(chunk.offset + 1) >= 0
                 },
-
-                headers: {
-                // Authorization: "Bearer " //+ Ticket.get().access_token
-                },
-                allowDuplicateUploads: true
+                headers: {},
+                // query() {},
+                allowDuplicateUploads: false
             },
             attrs: {
                 accept: ACCEPT_CONFIG.getAll()
             },
             statusText: {
                 success: "已完成",
-                error: "传输失败",
+                error: "上传失败",
                 uploading: "上传中",
                 paused: "暂停中",
                 waiting: "等待上传"
             },
-            // 自定义字段
-            panelShow: true, //选择文件后，展示上传panel
-            collapse: true, // 默认折叠状态
-            isShowFilePosition: true, // 是否显示文件夹位置的一列 alse 不显示
-            myFileList: [], // 上传的所有文件列表
-            totalProgress: 0, // 总上传进度百分比，未格式化成小数
-            currentSpeed: 0, // 当前上传速度，未格式化 
-            needActionCheck: false, // 全部暂停 传给组件重置 _actionCheck
-            // isOpenUpload: true, // 待定， 正式时删除
+            params: {}, // 参数
+
+            panelShow: true,          // 选择文件后，展示上传panel
+            collapse: true,           // 默认折叠状态
+            isShowFilePosition: false, // 是否显示文件夹位置的一列 false 不显示
+            myFileList: [],           // 上传的所有文件列表
+
+            totalProgress: 0,         // 总上传进度百分比，未格式化成小数
+            currentSpeed: 0,          // 当前上传速度，未格式化 
+            needActionCheck: false,   // 全部暂停 传给组件重置 _actionCheck
+            isOpenUpload: false,      // 待定，
         };
+    },
+    created() {
+        this.$emit('openUploader')
+    },
+    mounted() {
+        Bus.$on('openUploader', query => {
+            this.isOpenUpload = true
+            this.params = query || {};
+            this.$nextTick(_=> {
+                if (this.$refs.uploadBtn) {
+                    $('#global-uploader-btn').click();
+                }
+            })
+        });
     },
     computed: {
         uploader() {
@@ -152,7 +151,7 @@ export default {
         // 格式化上传速度
         formatedAverageSpeed () {
             let speed = this.currentSpeed ? this.currentSpeed: 0;
-            return `${util.formatSize(speed)} / s`
+            return `${util.formatSize(speed)}/s`
         },
         // 文件总大小 
         totalSize () {
@@ -163,16 +162,14 @@ export default {
             return util.formatSize(size)
         },
         // 文件上传页面显示隐藏 从store 中获取
-        isOpenUpload () {
-            return this.$store.state.isOpenUpload;
-        }
-         
+        // isOpenUpload () {
+            // return this.$store.state.isOpenUpload;
+        // }
     },
     methods: {
         onFileAdded(file) {
             this.panelShow = true;
             this.myFileList = this.uploader.fileList;
-            // 计算MD5
             this.computeMD5(file);
         },
         // 文件过程中
@@ -189,8 +186,11 @@ export default {
          * @chunk {Object}     最后一个chunk 吧
          */
         async onFileSuccess(rootFile, file, response, chunk) {
-            console.log('onFileSuccess');
             let res = JSON.parse(response) || {}
+            if (res.state !==0) {
+                this.statusSet(file.id, 'mergefailed');
+                return false;
+            }
             let dataInfo = {
                 ...file,
                 filename: file.name,
@@ -198,33 +198,40 @@ export default {
                 totalSize: file.size,
                 id: file.id,
                 type: file.fileType, 
+                createDate: new Date().getTime()
             }
         
             // 如果服务端返回需要合并
-            if (res.needMerge && res.state == 0){
-                console.log('合并了')
+            if (res.needMerge  && res.state == 0){
+                 this.statusSet(file.id, 'merging');
                 try {
                     const mergeRes = await mergeFile(dataInfo);
-                    if (mergeRes.msg == '合并成功' && data.state == 0) {
-                        console.log('合并成功')
+                    if (mergeRes.msg == '合并成功'&& mergeRes.state === 0) {
+                        this.statusRemove(file.id);
                     } else {
-                        // console.log('合并失败；', mergeRes.msg)
+                        this.statusSet(file.id, 'mergefailed');
                     }
-                } catch (e) {
-                    console.log('合并error', e)
+                } catch (error) {
+                    this.statusSet(file.id, 'mergefailed');
                 }
-            } else {
-            // 不需要合并
-                // Bus.$emit("fileSuccess", res);
-                console.log("上传成功 不需要合并");
+            }  
+        },
+        onFileComplete () {
+            // let isall = this.uploader.isComplete()
+        },
+        // 所有文件上传完毕
+        onComplete () {
+            let hasError = this.uploader.fileList.some(file =>  file.error)
+
+            if (!hasError) {
+                Bus.$emit('onGlobalUploadComplete', this.uploader.fileList)
             }
         },
         // 失败后
         onFileError(rootFile, file, response, chunk) {
-            this.toggleProcess = 0
-            console.log('onFileError');
+            this.toggleProcess = 0;
+            Bus.$emit('onGlobalUploadError', file)
         },
-
         /**
          * 计算md5，实现断点续传及秒传
          * 断点续传及秒传的基础是要计算文件的MD5，这是文件的唯一标识，然后服务器根据MD5进行判断，是进行秒传还是断点续传。
@@ -234,78 +241,120 @@ export default {
         computeMD5(file) {
             let fileReader = new FileReader();
             let time = new Date().getTime();
-            let md5 = "";
-            file.pause(); // 暂停上传
-
-            fileReader.readAsArrayBuffer(file.file); // 读取文件对象，把文件转成md5，
-            fileReader.onload = e => {
-                if (file.size != e.target.result.byteLength) {
-                    this.$Notice.warning({
-                        title: '正在上传中',
-                        duration: 2, // 秒
-                        desc: "Browser reported success but could not read the file until the end."
+            let blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice;
+            let currentChunk = 0;
+            const chunkSize = 10 * 1024 * 1000;
+            let chunks = Math.ceil(file.size / chunkSize);
+            let spark = new SparkMD5.ArrayBuffer();
+            // 文件状态设为"计算MD5"
+            this.statusSet(file.id, 'md5');
+            file.pause();
+            loadNext();
+            fileReader.onload = (e => {
+                spark.append(e.target.result);
+                if (currentChunk < chunks) {
+                    currentChunk++;
+                    loadNext();
+                    // 实时展示MD5的计算进度
+                    this.$nextTick(() => {
+                        console.log(((currentChunk/chunks)*100).toFixed(0)+'%')
+                        $(`.myStatus_${file.id}`).text('校验MD5 '+ ((currentChunk/chunks)*100).toFixed(0)+'%')
                     })
-                    return;
+                } else {
+                    let md5 = spark.end();
+                    this.computeMD5Success(md5, file);
+                    console.log(`MD5计算完毕：${file.name} \nMD5：${md5} \n分片：${chunks} 大小:${file.size} 用时：${new Date().getTime() - time} ms`);
                 }
-                
-                md5 = SparkMD5.ArrayBuffer.hash(e.target.result);
-
-                // 添加额外的参数
-                this.uploader.opts.query = {
-                    ...this.params
+            });
+            fileReader.onerror = function () {
+                // this.error(`文件${file.name}读取出错，请检查该文件`)
+                file.cancel();
+            };
+            function loadNext() {
+                let start = currentChunk * chunkSize;
+                let end = ((start + chunkSize) >= file.size) ? file.size : start + chunkSize;
+                fileReader.readAsArrayBuffer(blobSlice.call(file.file, start, end));
+            }
+        },
+        computeMD5Success(md5, file) {
+            // 将自定义参数直接加载uploader实例的opts上
+            Object.assign(this.uploader.opts, {
+                query: {
+                    ...this.params,
+                    createDate: new Date()
                 }
-
-                file.uniqueIdentifier = md5;
-                file.resume(); // 继续上传
-            };
-            // 可能会出错， 因为大文件会消耗内存消耗
-            fileReader.onerror = function() {
-                this.$Notice.warning({
-                    name: 'notice',
-                    title: '文件读取失败',
-                    duration: 3, // 秒
-                    desc:"FileReader onerror was triggered, maybe the browser aborted due to high memory usage."
-                })
-            };
+            })
+            file.uniqueIdentifier = md5;
+            file.resume();
+            this.statusRemove(file.id);
         },
-        onFileComplete () {
-            console.log('complete')
+        /**
+         * 新增的自定义的状态: 'md5'、'transcoding'、'failed'
+         * @param id
+         * @param status
+         */
+        statusSet(id, status) {
+            let statusMap = {
+                md5: {
+                    text: '校验MD5',
+                    bgc: '#fff'
+                },
+                merging: {
+                    text: '合并中',
+                    bgc: '#e2eeff'
+                },
+                transcoding: {
+                    text: '转码中',
+                    bgc: '#e2eeff'
+                },
+                failed: {
+                    text: '上传失败',
+                    bgc: '#e2eeff'
+                },
+                mergefailed: {
+                    text: '合并失败',
+                    bgc: '#e2eeff'
+                }
+            }
+            this.$nextTick(() => {
+                $(`<p class="myStatus_${id}"></p>`).appendTo(`.file_${id} .uploader-file-status`).css({
+                    'position': 'absolute',
+                    'top': '0',
+                    'left': '0',
+                    'right': '0',
+                    'bottom': '1px',
+                    'zIndex': '1',
+                    'backgroundColor': statusMap[status].bgc
+                }).text(statusMap[status].text);
+            })
         },
-        // 切换全屏
+        statusRemove(id) {
+            this.$nextTick(() => {
+                $(`.myStatus_${id}`).remove();
+            })
+        },
         toggleFullScreen() {
             this.collapse = !this.collapse;
         },
-        // 最小化 关闭
         close() {
             this.uploader.cancel();
-            // this.panelShow = false;
-            // this.isOpenUpload = false; // 待定 正式删除，使用下方的方式
-            this.$store.commit('OPEN_UPLOAD', false)
+            this.isOpenUpload = false;
+            // this.$store.commit('OPEN_UPLOAD', false)
         },
-        
-        /**
-         * 小数转成百分比
-         * @decimalNum 是小数的
-         */
-        formatPercent (decimalNum) {
-            return parseInt(decimalNum * 100);
-        },
+
         // 全部暂停  
         hanldeAllPaused() {
             this.uploader.pause();
             this.needActionCheck = true
-            console.log('全部暂停')
         },
         // 全部开始
         hanldeAllUpload() {
             this.uploader.resume(); 
             this.needActionCheck = true;
-            console.log('全部开始')
         },
         //  全部删除功能
         handleAllDelete () {
             this.uploader.cancel(); // 取消上传并上传所有文件
-            
             this.currentSpeed = 0;  // this.uploader.currentSpeed 删除时不是0
             this.totalProgress = this.uploader.progress() ; // 0
             this.myFileList = this.uploader.fileList ;// []
@@ -322,8 +371,24 @@ export default {
             }catch(e){ 
                 alert("请确定是否存在该盘符或文件"); 
             } 
-        }
-    }
+        },
+        /**
+         * 小数转成百分比
+         * @decimalNum 是小数的
+         */
+        formatPercent (decimalNum) {
+            return parseInt(decimalNum * 100);
+        },
+
+    },
+    beforeDestroy() {
+        console.log('beforeDestroy')
+        Bus.$off('openUploader');
+    },
+    destroyed() {
+        console.log('destory')
+        Bus.$off('openUploader');
+    },
 };
 </script>
 
@@ -389,10 +454,13 @@ export default {
                     width: 40%;
                 }
                 &:nth-child(2) {
+                    // width: 38%;
                     width: 35%;
+                    padding-left: 30px;
                 }
                 &:last-child {
                     width: 25%;
+                    padding-left: 30px;
                 }
             }
         }
@@ -505,5 +573,29 @@ export default {
     border-radius: 10px;
 }
 
- 
+@font-face {
+  font-family: 'iconfont';  /* project id 1375698 */
+  src: url('//at.alicdn.com/t/font_1375698_qfrsc3x2egg.eot');
+  src: url('//at.alicdn.com/t/font_1375698_qfrsc3x2egg.eot?#iefix') format('embedded-opentype'),
+  url('//at.alicdn.com/t/font_1375698_qfrsc3x2egg.woff2') format('woff2'),
+  url('//at.alicdn.com/t/font_1375698_qfrsc3x2egg.woff') format('woff'),
+  url('//at.alicdn.com/t/font_1375698_qfrsc3x2egg.ttf') format('truetype'),
+  url('//at.alicdn.com/t/font_1375698_qfrsc3x2egg.svg#iconfont') format('svg');
+}
+
+.iconfont {
+  font-family: "iconfont" !important;
+  font-size: 16px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-fullscreen:before {
+  content: "\e731";
+}
+
+.icon-fullscreen-exit:before {
+  content: "\e732";
+}
 </style>

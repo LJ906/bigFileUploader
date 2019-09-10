@@ -47,6 +47,7 @@
      */
     import {ACCEPT_CONFIG} from './js/config';
     import Bus from './js/bus';
+    // import Bus from '@/utils/bus'
     import SparkMD5 from 'spark-md5';
     // 这两个是我自己项目中用的，请忽略
     // import {Ticket} from '@/assets/js/utils';

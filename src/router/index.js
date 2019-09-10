@@ -8,7 +8,7 @@ const Bigfileupload2 = () => import(/* webpackChunkName:"Bigfileupload2"*/ '@/vi
 
 const router = new VueRouter ({
     routes: [
-        {path: '/', redirect: '/home'},
+        {path: '/', redirect: '/openupload'},
         {
             path: '/home',
             component: () => import('@/views/home'),
@@ -26,7 +26,6 @@ const router = new VueRouter ({
                 },
                 {
                     path: '/openupload', // 打开全局上传组件
-                    // component: ()=>import('@/views/tree/tree')
                     component: () => import('@/components/globalUpload/openUpload')
                 },
                 {

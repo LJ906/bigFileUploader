@@ -1,6 +1,7 @@
 <template>
   <div id="app">
     <router-view></router-view>
+    <!-- 将上传组件全局注册 -->
     <global-upload></global-upload>
 
   </div>
@@ -9,11 +10,9 @@
 <script>
 import GlobalUpload from '@/components/globalUpload/globalUpload'
 
-//  import bigfileupload2 from '@/views/bigfileupload2'
 export default {
   name: 'app',
   components: {
-    // bigfileupload2,
     GlobalUpload
   },
   

@@ -453,7 +453,8 @@
   }
   .uploader-file-actions {
     padding: 0 10px;
-    width: 15%;
+    /* width: 15%; */
+    width: 20%;
   }
   .uploader-file-extra {
     width: 10%;
