@@ -19,9 +19,9 @@
             @complete="onComplete"
             class="uploader-app">
             <uploader-unsupport></uploader-unsupport>
-            <div :class="{'padding10': collapse}">
+            <div :class="{'padding10': collapse}" v-show="panelShow">
                 <!-- 上传按钮 -->
-                <div class="uploader-title-wrp" @dblclick="collapse = !collapse">
+                <div class="uploader-title-wrp" @dblclick="collapse = !collapse" >
                     <!-- <uploader-btn :directory="true" v-if="!collapse">选文件夹</uploader-btn> -->
                     <uploader-btn id="global-uploader-btn" :attrs="attrs" ref="uploadBtn" >+ 选择文件</uploader-btn>
                     <Button size="small" @click="hanldeAllPaused" class="operBtn" type="warning">全部暂停</Button>
@@ -29,27 +29,11 @@
                     <Button size="small" @click="handleAllDelete" class="operBtn" type="error">全部删除</Button>
                     <!-- 全屏 -->
                     <div class="operate">
-                        <i :class="['iconfont', {'icon-fullscreen' : collapse , 'icon-fullscreen-exit': !collapse}]"  @click="toggleFullScreen" ></i>
+                        <!-- <i :class="['iconfont', {'icon-fullscreen' : collapse , 'icon-fullscreen-exit': !collapse}]"  @click="toggleFullScreen" ></i> -->
                         <!-- <Button size="small" @click="toggleFullScreen" :icon="collapse ? 'md-expand' : 'md-contract'" type="text">展开</Button> -->
-                        <Button size="small" @click="close" icon="md-close" type="text"></Button>
+                        <Button size="small" @click="close" type="text">X</Button>
                     </div>
                 </div>
-                <!-- 进度条 -->
-                <!-- <div class="common-config-process"> -->
-                    <!-- 进度条 -->
-                    <!-- <span class="config-progress-title">上传总进度：</span>
-                    <Progress :percent="formatPercent(totalProgress)" :stroke-width="5" class="total-progress"/>
-                    <span style="width: 100px; margin-right: 10px">{{formatedAverageSpeed}}</span>  -->
-
-                    <!-- <span style="width: 60px; margin-right: 10px"> {{totalSize}}</span> -->
-                    <!-- <div class="oper-btn" v-show="!collapse">
-                        <uploader-btn id="global-uploader-btn uploder-btn" :attrs="attrs" ref="uploadBtn" >+ 选择文件</uploader-btn>
-
-                        <Button size="small" @click="hanldeAllPaused" class="operBtn" type="warning">全部暂停</Button>
-                        <Button size="small" @click="hanldeAllUpload" class="operBtn" type="primary">全部开始</Button>
-                        <Button size="small" @click="handleAllDelete" class="operBtn" type="error">全部删除</Button>
-                    </div>
-                </div> -->
 
                 <div class="common-config-count" v-show="!collapse">
                     <span class="oper-btn-right">
@@ -93,18 +77,19 @@
 import { ACCEPT_CONFIG } from "./js/config";
 import SparkMD5 from "spark-md5";
 import util from './js/util';
-import { mergeFile } from '@/api/file';
+// import { mergeFile } from '@/api/file';
 import Bus from '@/utils/bus'
-// import { mergeFile } from './api';
+import { mergeFile } from './api/file';
 import $ from "jquery";
-
 export default {
     data() {
         return {
             options: {
                 withCredentials: true,
                 // target: process.env.BASE_UPLOAD_API + '/a/upload/chunk', //  目标上传 URL"http://10.102.17.57:8082/HCL504/a/upload/chunk"
-                target: "//localhost:3000/upload", 
+                target: process.env.BASE_UPLOAD_API + '/upload/chunk', //  目标上传 URL"http://10.102.17.57:8082/HCL504/a/upload/chunk"
+                // target: "//localhost:3000/upload",
+                target: '/upload/chunk', 
                 chunkSize: 2 * 1024 * 1024,  //分块大小2M 
                 fileParameterName: "file",   //上传文件时文件的参数名，默认file
                 maxChunkRetries: 1,          //最大自动失败重试上传次数
@@ -151,7 +136,10 @@ export default {
     mounted() {
         Bus.$on('openUploader', query => {
             this.isOpenUpload = true
-            this.params = query || {};
+            this.params = {
+                ...this.params, 
+                ...query,
+            }
             this.$nextTick(_=> {
                 if (this.$refs.uploadBtn) {
                     $('#global-uploader-btn').click();
@@ -179,10 +167,6 @@ export default {
                         }, 0)
             return util.formatSize(size)
         },
-        // 文件上传页面显示隐藏 从store 中获取
-        // isOpenUpload () {
-            // return this.$store.state.isOpenUpload;
-        // }
     },
     methods: {
         onFileAdded(file) {
@@ -209,6 +193,8 @@ export default {
                 this.statusSet(file.id, 'mergefailed');
                 return false;
             }
+
+           
             let dataInfo = {
                 ...file,
                 filename: file.name,
@@ -229,6 +215,7 @@ export default {
                         this.statusRemove(file.id);
                         Bus.$emit('fileSuccess');
                     } else {
+                        console.log('合并成失败')
                         this.isMergeSuccess = false;
                         this.statusSet(file.id, 'mergefailed');
                     }
@@ -367,6 +354,7 @@ export default {
         close() {
             this.uploader.cancel();
             this.isOpenUpload = false;
+            this.panelShow = false;
             // this.$store.commit('OPEN_UPLOAD', false)
         },
         // 全部暂停  
@@ -627,6 +615,4 @@ export default {
 .icon-fullscreen-exit:before {
   content: "\e732";
 }
-
-
 </style>

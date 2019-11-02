@@ -19,31 +19,28 @@ service.interceptors.request.use(
     },
     error => {
         // Do something with request error
-        console.log(error) // for debug
         Promise.reject(error)
     }
 )
 
 //http response 拦截器
 service.interceptors.response.use(res => {
-    if (res.headers && (contentType[res.headers['content-type']])) {
-      downloadUrl(res);
-      return;
-    }
-    if(res.data.state ==2){
-        router.push({
-          path:"/login",
-          query:{redirect:router.currentRoute.fullPath}//登陆超时
-        })
-      }
-      if(res.data.state ==3){
-        router.push({
-          path:"/error500",
-        })
-        Store.save('detail',res.data.detail);
-      }
-  
-  
+    // if (res.headers && (contentType[res.headers['content-type']])) {
+    //   downloadUrl(res);
+    //   return;
+    // }
+    // if(res.data.state ==2){
+    //     router.push({
+    //       path:"/login",
+    //       query:{redirect:router.currentRoute.fullPath}//登陆超时
+    //     })
+    //   }
+    //   if(res.data.state ==3){
+    //     router.push({
+    //       path:"/error500",
+    //     })
+    //     Store.save('detail',res.data.detail);
+    //   }
       // return res;
       return res.data
     },

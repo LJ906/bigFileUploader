@@ -42,11 +42,13 @@
         <div class="uploader-file-status">
           <span v-show="status !== 'uploading'">{{statusText}}</span>
           <div v-show="status == 'uploading'" class="lj-process-wrp">
-            <Progress :percent="parseInt(progressStyle.progress) " :stroke-width="5" style=" height: 20px; line-height: 30px"/>
-            <span style="flex: 1; line-height: 25px">
+            <!-- <Progress :percent="parseInt(progressStyle.progress) " :stroke-width="5" style=" height: 20px; line-height: 30px"/> -->
+            <!-- <span style="flex: 1; line-height: 25px">
               <em>{{formatedAverageSpeed}}</em>
-              <!-- <i> 剩余时间:{{formatedTimeRemaining}}</i> -->
-            </span>
+            </span> -->
+            <span>{{progressStyle.progress}}</span>
+            <em>{{formatedAverageSpeed}}</em>
+            <i>{{formatedTimeRemaining}}</i>
           </div>
         </div>
         <div class="uploader-file-actions">
@@ -453,7 +455,6 @@
   }
   .uploader-file-actions {
     padding: 0 10px;
-    /* width: 15%; */
     width: 20%;
   }
   .uploader-file-extra {
@@ -488,7 +489,6 @@
   }
   .uploader-file-actions .uploader-file-position {
     display: block;
-    /* background-position-y: -34px; */
   }
   /** 增加 */
   .uploader-file-name {
@@ -509,10 +509,10 @@
     text-overflow: ellipsis;
   }
   .lj-process-wrp {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    height: 100%;
+    /* display: flex; */
+    /* flex-direction: column; */
+    /* justify-content: center; */
+    /* height: 100%; */
   }
   
   

@@ -15,8 +15,6 @@ export default {
   components: {
     GlobalUpload
   },
-  
- 
 }
 </script>
 
@@ -27,4 +25,5 @@ export default {
   -moz-osx-font-smoothing: grayscale;
    color: #2c3e50;
  }
+
 </style>

@@ -11,9 +11,7 @@
             @file-error="onFileError"
             class="uploader-app">
             <uploader-unsupport></uploader-unsupport>
-
             <uploader-btn id="global-uploader-btn" :attrs="attrs" ref="uploadBtn">选择文件</uploader-btn>
-
             <uploader-list v-show="panelShow">
                 <div class="file-panel" slot-scope="props" :class="{'collapse': collapse}">
                     <div class="file-title">

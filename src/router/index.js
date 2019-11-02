@@ -44,6 +44,11 @@ const router = new VueRouter ({
                     path: '/searchbar',
                     component: () => import('@/views/searchBar')
                 },
+               
+                {
+                    path: '/svg',
+                    component: () => import('@/views/iconfont/svg')
+                },
 
 
             ]

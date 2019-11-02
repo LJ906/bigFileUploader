@@ -4,7 +4,7 @@ import axios from 'axios';
 const baseUrl = process.env.NODE_ENV === 'production' ? '' : '';  
 // 创建实例
 const instance = axios.create({
-    // baseURL: process.env.BASE_UPLOAD_API,
+    baseURL: process.env.BASE_UPLOAD_API,
     baseUrl: baseUrl,
     timeout: 20000, 
     headers: {
@@ -20,3 +20,5 @@ const instance = axios.create({
         data
     });
 };
+
+

@@ -1,5 +1,12 @@
 const webpack = require('webpack')
 
+// const px2rem = require('postcss-px2rem')
+
+// const postcss = px2rem({
+//   remUnit: 100   //基准大小 baseSize，需要和rem.js中相同
+// })
+
+
 module.exports = {
     // 基本路径
     publicPath: './',
@@ -36,7 +43,13 @@ module.exports = {
         // 开启 CSS source maps?
         sourceMap: false,
         // css预设器配置项
-        loaderOptions: {},
+        loaderOptions: {
+            // postcss: {
+            //     plugins: [
+            //       // postcss
+            //     ]
+            // }
+        },
         // 启用 CSS modules for all css / pre-processor files.
         modules: false
     },
@@ -60,14 +73,22 @@ module.exports = {
         proxy: {
             // 设置代理
             '/upload': {
-                target: 'http://10.102.17.57:8081',
+                // target: 'http://10.102.17.57:8081',
+                target: 'http://10.102.17.57:8082/HCL504/a',
                 changeOrigin: true,
                 pathRewrite: {
                   '^/upload': '/upload'
                 }
             },
-
-           
+            // 设置代理
+            '/a/upload': {
+                // target: 'http://10.102.17.57:8081',
+                target: 'http://10.102.17.57:8082/HCL504/',
+                changeOrigin: true,
+                pathRewrite: {
+                  '^/a/upload': '/a/upload'
+                }
+            },
         }
     },
     // 第三方插件配置
